@@ -1,0 +1,9 @@
+[package]
+name = "truncatable"
+version = "0.1.0"
+authors = ["lcnr/Bastian Kauschke <bastian_kauschke@hotmail.de>"]
+edition = "2018"
+
+[dependencies]
+num-bigint = "0.2"
+num-traits = "0.2"

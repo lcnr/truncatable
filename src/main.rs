@@ -13,7 +13,7 @@ fn radix(x: &BigUint, radix: u32) -> String {
 }
 
 fn truncatable(base: u32) {
-    // println!("starting with base {}", base);
+    print!("Base {}: ", base);
     let mut numbers: Vec<_> = (2..base).filter_map(|n| {
         if (2..n).any(|i| n % i == 0) {
             None
@@ -28,7 +28,8 @@ fn truncatable(base: u32) {
     let mut offset = BigUint::from(base);
     let mut digits = 1;
     while !numbers.is_empty() {
-        // println!("There are {:4} numbers with {:3} digits", numbers.len(), digits);
+        print!("{}", numbers.len());
+        
 
         numbers = numbers.iter().flat_map(|b| {
             (1..base).flat_map(|n| {
@@ -46,8 +47,11 @@ fn truncatable(base: u32) {
 
         digits += 1;
         offset *= base;
+        if !numbers.is_empty() {
+            print!(", ");
+        }
     }
-    println!("The biggest truncatable prime in base {:2} with {:3} digits is {}", base, digits, radix(&biggest_prime, base));
+    println!("\nThe biggest truncatable prime in base {} with {} digits is {}\n", base, digits, radix(&biggest_prime, base));
 }
 
 

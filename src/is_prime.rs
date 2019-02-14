@@ -35,30 +35,27 @@ pub fn is_prime(num: &BigUint) -> bool {
         if unsafe { unlikely(&sqrt.pow(2u8) == num) } {
             false
         }
+        else if sqrt_bits <= 32 {
+            let sqrt = sqrt.to_u32().expect("to_u32");
+            let mut i = 3;
+            while i < sqrt {
+                if unsafe { unlikely(num.quick_rem(i) == 0) } {
+                    return false;
+                }
+                i += 2;
+            }
+            true
+        }
         else {
-            let zero = Zero::zero();
-            if sqrt_bits <= 32 {
-                let sqrt = sqrt.to_u32().expect("to_u32");
-                let mut i = 3;
-                while i < sqrt {
-                    if unsafe { unlikely(num % i == zero) } {
-                        return false;
-                    }
-                    i += 2;
+            let mut i = BigUint::from(3u8);
+            while &i < &sqrt {
+                if unsafe { unlikely((num % &i).is_zero()) } {
+                    println!("hey");
+                    return false;
                 }
-                true
+                i += 2u8;
             }
-            else {
-                let mut i = BigUint::from(3u8);
-                while &i < &sqrt {
-                    if unsafe { unlikely(num % &i == zero) } {
-                        println!("hey");
-                        return false;
-                    }
-                    i += 2u8;
-                }
-                true
-            }
+            true
         }
     }
 }
@@ -77,6 +74,6 @@ mod test {
     #[test]
     fn thirty_seven_is_prime() {
         let thirty_seven = BigUint::from(37u8);
-        assert!(is_prime(&two));
+        assert!(is_prime(&thirty_seven));
     }
 }

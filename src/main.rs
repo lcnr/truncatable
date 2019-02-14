@@ -7,6 +7,7 @@ use num_bigint::BigUint;
 
 use crate::is_prime::is_prime;
 
+use std::io::{stdout, Write};
 
 fn radix(x: &BigUint, radix: u32) -> String {
     x.to_radix_be(radix).into_iter().map(|c| std::char::from_digit(c as u32, radix).unwrap()).collect()
@@ -14,6 +15,7 @@ fn radix(x: &BigUint, radix: u32) -> String {
 
 fn truncatable(base: u32) {
     print!("Base {}: ", base);
+    
     let mut numbers: Vec<_> = (2..base).filter_map(|n| {
         if (2..n).any(|i| n % i == 0) {
             None
@@ -29,7 +31,7 @@ fn truncatable(base: u32) {
     let mut digits = 1;
     while !numbers.is_empty() {
         print!("{}", numbers.len());
-        
+        stdout().flush().unwrap();
 
         numbers = numbers.iter().flat_map(|b| {
             (1..base).flat_map(|n| {

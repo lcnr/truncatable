@@ -26,7 +26,7 @@ pub fn is_prime(num: &BigUint) -> bool {
             _ => false
         }
     }
-    else if num.is_even() || !miller_rabin(num, bits >> 2) {
+    else if num.is_even() || !miller_rabin(num, bits >> 2) || num.quick_rem(3) == 0 {
         false
     }
     else {
@@ -37,23 +37,28 @@ pub fn is_prime(num: &BigUint) -> bool {
         }
         else if sqrt_bits <= 32 {
             let sqrt = sqrt.to_u32().expect("to_u32");
-            let mut i = 3;
+            let mut i = 5;
             while i < sqrt {
-                if unsafe { unlikely(num.quick_rem(i) == 0) } {
+                if unsafe { unlikely(num.quick_rem(i) == 0 || num.quick_rem(i + 2) == 0) }{
                     return false;
                 }
-                i += 2;
+                i += 6;
             }
             true
         }
         else {
-            let mut i = BigUint::from(3u8);
+            let mut i = BigUint::from(5u8);
             while &i < &sqrt {
                 if unsafe { unlikely((num % &i).is_zero()) } {
                     println!("hey");
                     return false;
                 }
                 i += 2u8;
+                if unsafe { unlikely((num % &i).is_zero()) } {
+                    println!("hey");
+                    return false;
+                }
+                i += 4u8;
             }
             true
         }

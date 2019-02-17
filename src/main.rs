@@ -3,6 +3,8 @@
 mod is_prime;
 mod miller_rabin;
 
+use rayon::prelude::*;
+
 use num_bigint::BigUint;
 
 use crate::is_prime::is_prime;
@@ -33,7 +35,7 @@ fn truncatable(base: u32) {
         print!("{}", numbers.len());
         stdout().flush().unwrap();
 
-        numbers = numbers.iter().flat_map(|b| {
+        numbers = numbers.par_iter().flat_map(|b| {
             (1..base).flat_map(|n| {
                 let num = b + (&offset * n);
                 if is_prime(&num) { 
@@ -47,9 +49,9 @@ fn truncatable(base: u32) {
 
         biggest_prime = numbers.last().map_or(biggest_prime, |num| num.clone());
 
-        digits += 1;
         offset *= base;
         if !numbers.is_empty() {
+            digits += 1;
             print!(", ");
         }
     }
@@ -58,9 +60,7 @@ fn truncatable(base: u32) {
 
 
 fn main() {
-    let now = std::time::Instant::now();
-    for base in 3..11 {
+    for base in 3.. {
         truncatable(base);
     }
-    println!("time spend: {:?}", std::time::Instant::now().duration_since(now));
 }

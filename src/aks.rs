@@ -25,7 +25,6 @@ pub fn aks(n: &BigUint) -> bool {
     for b in 2..=(n.bits() as u32) {
         let a = n.nth_root(b);
         if &a.pow(b) == n {
-            //println!("1");
             return false
         }
     }

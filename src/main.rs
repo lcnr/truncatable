@@ -2,10 +2,10 @@
 
 mod is_prime;
 mod miller_rabin;
+mod aks;
+mod poly;
 
 use num_bigint::BigUint;
-
-use crate::is_prime::is_prime;
 
 use std::io::{stdout, Write};
 
@@ -36,7 +36,7 @@ fn truncatable(base: u32) {
         numbers = numbers.iter().flat_map(|b| {
             (1..base).flat_map(|n| {
                 let num = b + (&offset * n);
-                if is_prime(&num) { 
+                if aks::aks(&num) { 
                     Some(num) 
                 }
                 else { 
@@ -59,7 +59,7 @@ fn truncatable(base: u32) {
 
 fn main() {
     let now = std::time::Instant::now();
-    for base in 3..11 {
+    for base in 3..10 {
         truncatable(base);
     }
     println!("time spend: {:?}", std::time::Instant::now().duration_since(now));

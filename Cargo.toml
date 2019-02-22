@@ -9,3 +9,4 @@ num-bigint = { path = "../num-bigint", features = ["rand"] }
 num-traits = "0.2.4"
 num-integer = "0.1"
 rand = "0.6"
+primal = "*"

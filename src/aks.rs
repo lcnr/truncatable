@@ -1,26 +1,30 @@
 use num_bigint::BigUint;
-use num_integer::Integer;
+use num_integer::{
+    Integer,
+    Roots
+};
 use num_traits::{
+    ToPrimitive,
     Zero,
     One,
     Pow
 };
 
-// this function is slow as heck
-fn euler_phi(n: &BigUint) -> BigUint {
-    let mut total = BigUint::from(0u8);
-    let mut i = BigUint::from(1u8);
-    while &i < n {
-        if i.gcd(n).is_one() {
-            total += 1u8;
-        }
+use crate::poly::Poly;
 
-        i += 1u8;
+// this function is slow as heck
+fn euler_phi(n: u32) -> u32 {
+    let mut total = Zero::zero();
+    for i in 1..n {
+        if i.gcd(&n).is_one() {
+            total += 1;
+        }
     }
     total
 }
 
 pub fn aks(n: &BigUint) -> bool {
+    let now = std::time::Instant::now();
     // if n = a ^ b for integers a > 1 and b > 1, return false
     for b in 2..=(n.bits() as u32) {
         let a = n.nth_root(b);
@@ -45,16 +49,12 @@ pub fn aks(n: &BigUint) -> bool {
             }
             break 'outer;
         }
-        r
+        r.to_u32().expect("r does not fit into a usize")
     };
-
     // if 1 < gcd(a, n) < n for some a <= r, return false
     {
-        let mut a = BigUint::from(1u8);
-        while a < r {
-            a += 1u8;
-
-            let gcd = n.gcd(&a);
+        for a in 2..=r {
+            let gcd = n.gcd(&a.into());
             if !gcd.is_one() && &gcd < n {
                 return false;
             }
@@ -62,26 +62,40 @@ pub fn aks(n: &BigUint) -> bool {
     }
 
     // if n <= r, return true
-    if n <= &r {
-        return true;
+    if let Some(n) = n.to_u32() {
+        if n <= r {
+            return true;
+        }
     }
 
     // for a = 1 to floor(sqrt(euler(r)*log2(n))) do: if (X + a)^n != X^n + a (mod X^r - 1, n), return false
-    let max = euler_phi(&r).sqrt()*n.bits();
-    // println!("N: {}, max: {}, r: {}", n, max, r);
-    let mut a = BigUint::from(1u8);
-    while &a < &max {
-        //let mut poly = crate::poly::Poly::new(&a, n);
-        //println!("poly: {:?}", poly);
-        //assert_eq!((n % &r).to_usize().unwrap() + 1, poly.len());
-        //assert_eq!(crate::poly::Poly::poly_rem_mod_create(&a, n, &r), poly, "n: {}, a: {}, r: {}", n, a, r);
-        //if &a == &BigUint::from(2u8) {
-        //    println!("n: {}, r: {}, n % r: {}, len: {}, rem:  {:?}\n", n,r, n %&r, poly.len(), poly);
-        //}
-        if crate::poly::Poly::poly_rem_mod_create(&a, n, &r) != crate::poly::Poly::what_am_i_even_doing(n, &a, &r) { return false };
-        a += 1u8;
+    //
+    // note: max is currently larger than floor(sqrt(euler(r)*log2(n))) as n.bits() is used.
+    let max: u32 = euler_phi(r).sqrt() * n.bits() as u32;
+    let middle = std::time::Instant::now();
+    println!("max a: {}, r: {}", max, r);
+    for a in 1..max {
+        let mut poly = Poly::new(a.into());
+        poly.modmul(n, r.to_usize().unwrap());
+        
+        // check if `poly == X^n + a (mod X^r - 1)`
+        // `X^n + a mod X^r - 1` is equal to a + x ^ (n % r) == a + x ^ v
+        // if `v` is zero this does not follow the specification, the result is still correct, as `n % r == 0 => n is not prime`
+        let v = n.quick_rem(r) + 1;
+        if !(poly[0].to_u32().map_or(false, |o| o == a)) && poly[v].is_one() && {
+            let mut a = true;
+            for i in 1..v {
+                a &= poly[v].is_zero();
+            }
+            a
+        } {
+            let end = std::time::Instant::now();
+            println!("1-4 / 5: {}",  middle.duration_since(now).as_float_secs() / end.duration_since(middle).as_float_secs());
+            return false;
+        }
     }
-    
+    let end = std::time::Instant::now();
+    println!("1-4 / 5: {}",  middle.duration_since(now).as_float_secs() / end.duration_since(middle).as_float_secs());
     // return true
     true
 }

@@ -1,4 +1,4 @@
-#![feature(core_intrinsics, try_from)]
+#![feature(core_intrinsics, try_from, duration_float)]
 
 mod is_prime;
 mod miller_rabin;
@@ -58,16 +58,14 @@ fn truncatable(base: u32) {
 
 
 fn main() {
-    print!("1");
+    //aks::aks(&31u8.into());
+    //return;
+    //print!("1");
     std::io::stdout().flush().unwrap();
     let mut now = std::time::Instant::now();
-    for a in 2u64.. {
+    for a in 10000u64.. {
+        println!("{:10}: {:?}", a, std::time::Instant::now().duration_since(now));
         assert_eq!(primal::is_prime(a), aks::aks(&a.into()));
-        if std::time::Instant::now().duration_since(now) > std::time::Duration::from_secs(5) {
-            print!(", {}", a);
-            std::io::stdout().flush().unwrap();
-            now = std::time::Instant::now();
-        }
     }
     return;
 

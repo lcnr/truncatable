@@ -10,3 +10,7 @@ num-traits = "0.2.4"
 num-integer = "0.1"
 rand = "0.6"
 primal = "*"
+lazy_static = "1"
+
+[profile.release]
+overflow-checks = true

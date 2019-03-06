@@ -24,7 +24,6 @@ fn euler_phi(n: u32) -> u32 {
 }
 
 pub fn aks(n: &BigUint) -> bool {
-    let now = std::time::Instant::now();
     // if n = a ^ b for integers a > 1 and b > 1, return false
     for b in 2..=(n.bits() as u32) {
         let a = n.nth_root(b);
@@ -68,35 +67,31 @@ pub fn aks(n: &BigUint) -> bool {
         }
     }
 
-    // for a = 1 to floor(sqrt(euler(r)*log2(n))) do: if (X + a)^n != X^n + a (mod X^r - 1, n), return false
+    // for a = 1 to floor(sqrt(euler(r))*log2(n)) do: if (X + a)^n != X^n + a (mod X^r - 1, n), return false
     //
     // note: max is currently larger than floor(sqrt(euler(r)*log2(n))) as n.bits() is used.
     let max: u32 = euler_phi(r).sqrt() * n.bits() as u32;
-    let middle = std::time::Instant::now();
-    println!("max a: {}, r: {}", max, r);
     for a in 1..max {
         let mut poly = Poly::new(a.into());
-        poly.modmul(n, r.to_usize().unwrap());
+        poly.modpow(n, r.to_usize().unwrap());
+        poly %= n;
         
         // check if `poly == X^n + a (mod X^r - 1)`
         // `X^n + a mod X^r - 1` is equal to a + x ^ (n % r) == a + x ^ v
-        // if `v` is zero this does not follow the specification, the result is still correct, as `n % r == 0 => n is not prime`
-        let v = n.quick_rem(r) + 1;
+        // does not work if `v` is zero, this does not matter as `n % r = 0` means that n is not prime`,
+        // which is correctly identified
+        let v = (n % r).to_usize().unwrap() + 1;
         if !(poly[0].to_u32().map_or(false, |o| o == a)) && poly[v].is_one() && {
             let mut a = true;
-            for i in 1..v {
+            for _ in 1..v {
                 a &= poly[v].is_zero();
             }
             a
         } {
-            let end = std::time::Instant::now();
-            println!("1-4 / 5: {}",  middle.duration_since(now).as_float_secs() / end.duration_since(middle).as_float_secs());
             return false;
         }
     }
-    let end = std::time::Instant::now();
-    println!("1-4 / 5: {}",  middle.duration_since(now).as_float_secs() / end.duration_since(middle).as_float_secs());
-    // return true
+
     true
 }
 
@@ -112,7 +107,7 @@ mod test {
 
     #[test]
     fn euler_phi_test() {
-        assert_eq!(euler_phi(&BigUint::from(12u8)), BigUint::from(4u8));
-        assert_eq!(euler_phi(&BigUint::from(133u8)), BigUint::from(108u8));
+        assert_eq!(euler_phi(12), 4);
+        assert_eq!(euler_phi(133), 108);
     }
 }

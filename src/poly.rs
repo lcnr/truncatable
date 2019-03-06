@@ -45,22 +45,17 @@ impl std::fmt::Debug for Poly {
     }
 }
 
-
-fn count(n: &BigUint, c: &BigUint) -> BigUint {
-    n.factorial()/(c.factorial() * (n - c).factorial())
-}
-
 impl Poly {
     /// creates a new polynomial in the form a + x
     pub fn new(a: BigUint) -> Self {
-        println!("current a: {}", a);
+        //println!("current a: {}", a);
         Self {
             data: vec![a, One::one()],
         }
     }
 
-    /// calculates (self ^ n % (x^r-1)) % n
-    pub fn modmul(&mut self, n: &BigUint, r: usize) {
+    /// calculates (self ^ n % (x^r-1))
+    pub fn modpow(&mut self, n: &BigUint, r: usize) {
         let mut exponent = n.clone();
         let mut number = Poly { data: vec![One::one()]};
         // println!("exp: {}\nnumber: {:?}\nself: {:?}\n", exponent, number, self);
@@ -72,7 +67,6 @@ impl Poly {
                     let x = number.data.pop().unwrap();
                     number.data[new] += x;
                 }
-                //number %= n;
             }
             *self = &*self * &*self;
             while self.len() > r {
@@ -80,30 +74,11 @@ impl Poly {
                 let x = self.data.pop().unwrap();
                 self.data[new] += x;
             }
-            //*self %= n;
             exponent >>= 1;
             // println!("exp: {}\nnumber: {:?}\nself: {:?}\n", exponent, number, self);
         }
-        *self = number % n;
+
         self.normalize();
-    }
-
-    /// `(x^n+a)%(x^r -1)`
-    pub fn what_am_i_even_doing(n: &BigUint, a: &BigUint, r: &BigUint) -> Self {
-        let pos = (n % r).to_usize().unwrap();
-        let mut data = vec![a.clone()];
-        if pos > 0 {
-            data = data.into_iter().chain((1..=pos).map(|p| if p < pos { Zero::zero() } else { One::one() })).collect();
-        }
-
-        Self {
-            data
-        }
-    }
-
-    /// calculates `((x + a)^n % (x^r - 1)) % n`
-    pub fn poly_rem_mod_create(a: &BigUint, n: &BigUint, r: &BigUint) -> Self {
-        Self::what_am_i_even_doing(n, &a.modpow(n, n), r)
     }
 
     /// calculates `(self % (x^r - 1)) % n`
@@ -170,25 +145,15 @@ impl RemAssign<&BigUint> for Poly {
     }
 }
 
-impl Index<u32> for Poly {
+impl Index<usize> for Poly {
     type Output = BigUint;
 
     /// returns the coefficient of x^n
-    fn index(&self, n: u32) -> &BigUint {
-        self.data.get(n as usize).unwrap_or(&ZERO)
+    fn index(&self, n: usize) -> &BigUint {
+        self.data.get(n).unwrap_or(&ZERO)
     }
 }
 
-/*
-impl std::ops::Drop for Poly {
-    fn drop(&mut self) {
-        static mut TOTAL: usize = 0;
-        unsafe { TOTAL += self.len();
-            println!("dropping a poly of len {}, total {}", self.len(), TOTAL);
-        }
-    }
-}
-*/
 #[cfg(test)]
 mod test {
     use super::*;

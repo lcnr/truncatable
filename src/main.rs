@@ -1,5 +1,3 @@
-#![feature(core_intrinsics, try_from, duration_float)]
-
 mod is_prime;
 mod miller_rabin;
 mod aks;
@@ -13,7 +11,7 @@ fn radix(x: &BigUint, radix: u32) -> String {
     x.to_radix_be(radix).into_iter().map(|c| std::char::from_digit(c as u32, radix).unwrap()).collect()
 }
 
-fn truncatable(base: u32) {
+fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
     print!("Base {}: ", base);
     
     let mut numbers: Vec<_> = (2..base).filter_map(|n| {
@@ -36,7 +34,7 @@ fn truncatable(base: u32) {
         numbers = numbers.iter().flat_map(|b| {
             (1..base).flat_map(|n| {
                 let num = b + (&offset * n);
-                if aks::aks(&num) { 
+                if primality_check(&num) { 
                     Some(num) 
                 }
                 else { 
@@ -58,20 +56,14 @@ fn truncatable(base: u32) {
 
 
 fn main() {
-    //aks::aks(&31u8.into());
-    //return;
-    //print!("1");
-    std::io::stdout().flush().unwrap();
-    let mut now = std::time::Instant::now();
-    for a in 10000u64.. {
-        println!("{:10}: {:?}", a, std::time::Instant::now().duration_since(now));
-        assert_eq!(primal::is_prime(a), aks::aks(&a.into()));
-    }
-    return;
+    let aks = false;
+    let check = if aks {
+        aks::aks
+    } else {
+        is_prime::is_prime
+    };
 
-    let now = std::time::Instant::now();
-    for base in 3..10 {
-        truncatable(base);
+    for base in 3.. {
+        truncatable(base, check);
     }
-    println!("time spend: {:?}", std::time::Instant::now().duration_since(now));
 }

@@ -1,12 +1,16 @@
 use num_bigint::{ BigUint, RandBigInt };
+use num_integer::Integer;
 
 use rand::thread_rng;
 
 
 fn get_rd(n: &BigUint) -> (usize, BigUint) {
     let mut odd: BigUint = n - 1u8;
-    let sup = odd.trailing_zeros().unwrap();
-    odd >>= sup;
+    let mut sup = 0;
+    while odd.is_even() {
+        sup += 1;
+        odd >>= 1;
+    }
 
     (sup, odd)
 }

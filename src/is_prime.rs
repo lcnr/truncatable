@@ -6,12 +6,10 @@ use num_bigint::BigUint;
 
 use crate::miller_rabin::miller_rabin;
 
-use std::intrinsics::unlikely;
-
 // only works for num > 3
 pub fn is_prime(num: &BigUint) -> bool {
     let bits = num.bits() as u32;
-    if unsafe { unlikely(bits <= 8) } {
+    if bits <= 8 {
         match num.to_u8().expect("to_u8") {
             2 | 3 | 5 | 7 | 11 | 13 |
             17 | 19 | 23 | 29 | 31 | 37 |
@@ -26,20 +24,20 @@ pub fn is_prime(num: &BigUint) -> bool {
             _ => false
         }
     }
-    else if num.is_even() || !miller_rabin(num, bits >> 2) || num.quick_rem(3) == 0 {
+    else if num.is_even() || !miller_rabin(num, 32) || (num % 3u8).is_zero() {
         false
     }
     else {
         let sqrt = num.sqrt();
         let sqrt_bits = sqrt.bits();
-        if unsafe { unlikely(&sqrt.pow(2u8) == num) } {
+        if &sqrt.pow(2u8) == num {
             false
         }
         else if sqrt_bits <= 32 {
             let sqrt = sqrt.to_u32().expect("to_u32");
             let mut i = 5;
             while i < sqrt {
-                if unsafe { unlikely(num.quick_rem(i) == 0 || num.quick_rem(i + 2) == 0) }{
+                if (num % i).is_zero() || (num % (i + 2)).is_zero() {
                     return false;
                 }
                 i += 6;
@@ -49,12 +47,12 @@ pub fn is_prime(num: &BigUint) -> bool {
         else {
             let mut i = BigUint::from(5u8);
             while &i < &sqrt {
-                if unsafe { unlikely((num % &i).is_zero()) } {
+                if (num % &i).is_zero() {
                     println!("hey");
                     return false;
                 }
                 i += 2u8;
-                if unsafe { unlikely((num % &i).is_zero()) } {
+                if (num % &i).is_zero() {
                     println!("hey");
                     return false;
                 }

@@ -33,8 +33,7 @@ pub fn is_prime(num: &BigUint) -> bool {
         if &sqrt.pow(2u8) == num {
             false
         }
-        else if sqrt_bits <= 32 {
-            let sqrt = sqrt.to_u32().expect("to_u32");
+        else if let Some(sqrt) = sqrt.to_u32();
             let mut i = 5;
             while i < sqrt {
                 if (num % i).is_zero() || (num % (i + 2)).is_zero() {

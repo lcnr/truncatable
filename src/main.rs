@@ -27,8 +27,10 @@ fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
 
     let mut offset = BigUint::from(base);
     let mut digits = 1;
+    let mut total = 0;
     while !numbers.is_empty() {
         print!("{}", numbers.len());
+        total += numbers.len();
         stdout().flush().unwrap();
 
         numbers = numbers.iter().flat_map(|b| {
@@ -51,7 +53,8 @@ fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
             print!(", ");
         }
     }
-    println!("\nThe biggest truncatable prime in base {} with {} digits is {}\n", base, digits, radix(&biggest_prime, base));
+    println!("\nThe biggest truncatable prime in base {} with {} digits is {}", base, digits, radix(&biggest_prime, base));
+    println!("There are a total of {} truncatable primes in base {}\n", total, base);
 }
 
 

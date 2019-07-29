@@ -6,7 +6,6 @@ use num_bigint::BigUint;
 
 use crate::miller_rabin::miller_rabin;
 
-// only works for num > 3
 pub fn is_prime(num: &BigUint) -> bool {
     let bits = num.bits() as u32;
     if bits <= 8 {
@@ -24,38 +23,10 @@ pub fn is_prime(num: &BigUint) -> bool {
             _ => false
         }
     }
-    else if num.is_even() || !miller_rabin(num, 16) || (num % 3u8).is_zero() {
+    else if num.is_even() || !miller_rabin(num, 64) {
         false
-    }
-    else {
-        let sqrt = num.sqrt();
-        if &sqrt.pow(2u8) == num {
-            false
-        }
-        else if let Some(sqrt) = sqrt.to_u32() {
-            let mut i = 5;
-            while i < sqrt {
-                if (num % i).is_zero() || (num % (i + 2)).is_zero() {
-                    return false;
-                }
-                i += 6;
-            }
-            true
-        }
-        else {
-            let mut i = BigUint::from(5u8);
-            while &i < &sqrt {
-                if (num % &i).is_zero() {
-                    return false;
-                }
-                i += 2u8;
-                if (num % &i).is_zero() {
-                    return false;
-                }
-                i += 4u8;
-            }
-            true
-        }
+    } else {
+        true
     }
 }
 

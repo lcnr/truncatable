@@ -4,8 +4,7 @@ mod aks;
 mod poly;
 
 use num_bigint::BigUint;
-
-use std::io::{stdout, Write};
+use num_traits::{One, Zero};
 
 fn radix(x: &BigUint, radix: u32) -> String {
     x.to_radix_be(radix).into_iter().map(|c| std::char::from_digit(c as u32, radix).unwrap()).collect()
@@ -14,47 +13,50 @@ fn radix(x: &BigUint, radix: u32) -> String {
 fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
     print!("Base {}: ", base);
     
-    let mut numbers: Vec<_> = (2..base).filter_map(|n| {
-        if (2..n).any(|i| n % i == 0) {
-            None
-        }
-        else {
-            Some(BigUint::from(n))
-        }
-    }).collect();
-
-    let mut biggest_prime = numbers.last().unwrap().clone();
-
-    let mut offset = BigUint::from(base);
-    let mut digits = 1;
-    let mut total = 0;
-    while !numbers.is_empty() {
-        print!("{}", numbers.len());
-        total += numbers.len();
-        stdout().flush().unwrap();
-
-        numbers = numbers.iter().flat_map(|b| {
-            (1..base).flat_map(|n| {
-                let num = b + (&offset * n);
-                if primality_check(&num) { 
-                    Some(num) 
-                }
-                else { 
-                    None 
-                }
-            }).collect::<Vec<_>>()
-        }).collect();
-
-        biggest_prime = numbers.last().map_or(biggest_prime, |num| num.clone());
-
-        digits += 1;
-        offset *= base;
-        if !numbers.is_empty() {
-            print!(", ");
-        }
+    let mut count = [0; 100];
+    let mut offsets = vec![BigUint::one()];
+    for _ in 0..100 {
+        offsets.push(offsets.last().unwrap() * base);
     }
-    println!("\nThe biggest truncatable prime in base {} with {} digits is {}", base, digits, radix(&biggest_prime, base));
-    println!("There are a total of {} truncatable primes in base {}\n", total, base);
+
+    let values = 1..base;
+    
+    let mut biggest = BigUint::zero();
+    let mut biggest_pos = 0;
+    let mut pos = 0;
+
+    let mut stack = vec![(BigUint::zero(), values.clone())];
+    while let Some((v, ref mut iter)) = stack.last_mut() {
+        if let Some(i) = iter.next() {
+
+            let mut next = &offsets[pos] * i;
+            next += &*v;
+            if primality_check(&next) {
+                count[pos] += 1;
+                stack.push((next, values.clone()));
+            }
+        } else {
+            if pos >= biggest_pos {
+                let (v, _) = stack.pop().unwrap();
+                biggest = v;
+                biggest_pos = pos;
+            } else {
+                stack.pop();
+            }
+
+        }
+
+        pos = stack.len().wrapping_sub(1);
+    }
+    print!("{}", count[0]);
+
+    for &i in &count[1..] {
+        if i == 0 {
+            break;
+        }
+        print!(", {}", i);
+    }
+    println!("\nThe biggest truncatable prime in base {} with {} digits is {} == {}\n", base, offsets.len() - 1, radix(&biggest, base), radix(&biggest, 10));
 }
 
 
@@ -66,7 +68,10 @@ fn main() {
         is_prime::is_prime
     };
 
+    use std::time::Instant;
+    let now = Instant::now();
     for base in 3.. {
         truncatable(base, check);
     }
+    println!("{:?}", now.elapsed());
 }

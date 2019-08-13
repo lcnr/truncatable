@@ -4,6 +4,7 @@ mod aks;
 mod poly;
 
 use num_bigint::BigUint;
+use num_traits::{One, Zero};
 
 use std::io::{stdout, Write};
 
@@ -14,44 +15,44 @@ fn radix(x: &BigUint, radix: u32) -> String {
 fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
     print!("Base {}: ", base);
     
-    let mut numbers: Vec<_> = (2..base).filter_map(|n| {
-        if (2..n).any(|i| n % i == 0) {
-            None
-        }
-        else {
-            Some(BigUint::from(n))
-        }
-    }).collect();
+    let mut count = Vec::new();
+    let mut offsets = vec![BigUint::one()];
 
-    let mut biggest_prime = numbers.last().unwrap().clone();
+    let values = 1..base;
+    let mut stack = vec![(BigUint::zero(), values.clone())];
 
-    let mut offset = BigUint::from(base);
-    let mut digits = 1;
-    while !numbers.is_empty() {
-        print!("{}", numbers.len());
-        stdout().flush().unwrap();
+    let mut biggest = BigUint::zero();
+    let mut len = stack.len();
+    while let Some((v, ref mut iter)) = stack.last_mut() {
+        if let Some(i) = iter.next() {
+            if len > offsets.len() {
+                offsets.push(offsets.last().unwrap() * base);
+            }
 
-        numbers = numbers.iter().flat_map(|b| {
-            (1..base).flat_map(|n| {
-                let num = b + (&offset * n);
-                if primality_check(&num) { 
-                    Some(num) 
+            let mut next = &offsets[len - 1] * i;
+            next += &*v;
+            if primality_check(&next) {
+                if len > count.len() {
+                    count.push(1);
+                } else {
+                    count[len - 1] += 1;   
                 }
-                else { 
-                    None 
-                }
-            }).collect::<Vec<_>>()
-        }).collect();
+                stack.push((next, values.clone()));
+            }
+        } else {
+            if &*v > &biggest {
+                let (v, _) = stack.pop().unwrap();
+                biggest = v;
+            } else {
+                stack.pop();
+            }
 
-        biggest_prime = numbers.last().map_or(biggest_prime, |num| num.clone());
-
-        digits += 1;
-        offset *= base;
-        if !numbers.is_empty() {
-            print!(", ");
         }
+
+        len = stack.len();
     }
-    println!("\nThe biggest truncatable prime in base {} with {} digits is {}\n", base, digits, radix(&biggest_prime, base));
+
+    println!("\nThe biggest truncatable prime in base {} with {} digits is {} == {}\n", base, offsets.len() - 1, radix(&biggest, base), radix(&biggest, 10));
 }
 
 

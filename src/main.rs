@@ -13,7 +13,7 @@ fn radix(x: &BigUint, radix: u32) -> String {
 }
 
 fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
-    print!("Base {}: ", base);
+    print!("Base {}:", base);
     
     let mut count = Vec::new();
     let mut offsets = vec![BigUint::one()];
@@ -52,6 +52,9 @@ fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
         len = stack.len();
     }
 
+    for i in count {
+        print!(" {}", i);
+    }
     println!("\nThe biggest truncatable prime in base {} with {} digits is {} == {}\n", base, offsets.len() - 1, radix(&biggest, base), radix(&biggest, 10));
 }
 
@@ -64,7 +67,10 @@ fn main() {
         is_prime::is_prime
     };
 
-    for base in 3.. {
+    use std::time::Instant;
+    let now = Instant::now();
+    for base in 3..10 {
         truncatable(base, check);
     }
+    println!("{:?}", now.elapsed());
 }

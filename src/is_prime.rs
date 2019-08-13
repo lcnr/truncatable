@@ -1,8 +1,6 @@
 use num_bigint::BigUint;
 use num_integer::Integer;
-use num_traits::Pow;
 use num_traits::ToPrimitive;
-use num_traits::Zero;
 
 use crate::miller_rabin::miller_rabin;
 

@@ -60,7 +60,7 @@ fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
     println!(
         "\nThe biggest truncatable prime in base {} with {} digits is {} == {}\n",
         base,
-        offsets.len() - 1,
+        count.iter().enumerate().find(|(_, &c)| c == 0).unwrap().0,
         radix(&biggest, base),
         radix(&biggest, 10)
     );

@@ -6,54 +6,55 @@ mod poly;
 use num_bigint::BigUint;
 use num_traits::{One, Zero};
 
-use std::io::{stdout, Write};
-
 fn radix(x: &BigUint, radix: u32) -> String {
     x.to_radix_be(radix).into_iter().map(|c| std::char::from_digit(c as u32, radix).unwrap()).collect()
 }
 
 fn truncatable(base: u32, mut primality_check: impl FnMut(&BigUint) -> bool) {
-    print!("Base {}:", base);
+    print!("Base {}: ", base);
     
-    let mut count = Vec::new();
+    let mut count = [0; 100];
     let mut offsets = vec![BigUint::one()];
+    for _ in 0..100 {
+        offsets.push(offsets.last().unwrap() * base);
+    }
 
     let values = 1..base;
-    let mut stack = vec![(BigUint::zero(), values.clone())];
-
+    
     let mut biggest = BigUint::zero();
-    let mut len = stack.len();
+    let mut biggest_pos = 0;
+    let mut pos = 0;
+
+    let mut stack = vec![(BigUint::zero(), values.clone())];
     while let Some((v, ref mut iter)) = stack.last_mut() {
         if let Some(i) = iter.next() {
-            if len > offsets.len() {
-                offsets.push(offsets.last().unwrap() * base);
-            }
 
-            let mut next = &offsets[len - 1] * i;
+            let mut next = &offsets[pos] * i;
             next += &*v;
             if primality_check(&next) {
-                if len > count.len() {
-                    count.push(1);
-                } else {
-                    count[len - 1] += 1;   
-                }
+                count[pos] += 1;
                 stack.push((next, values.clone()));
             }
         } else {
-            if &*v > &biggest {
+            if pos >= biggest_pos {
                 let (v, _) = stack.pop().unwrap();
                 biggest = v;
+                biggest_pos = pos;
             } else {
                 stack.pop();
             }
 
         }
 
-        len = stack.len();
+        pos = stack.len().wrapping_sub(1);
     }
+    print!("{}", count[0]);
 
-    for i in count {
-        print!(" {}", i);
+    for &i in &count[1..] {
+        if i == 0 {
+            break;
+        }
+        print!(", {}", i);
     }
     println!("\nThe biggest truncatable prime in base {} with {} digits is {} == {}\n", base, offsets.len() - 1, radix(&biggest, base), radix(&biggest, 10));
 }

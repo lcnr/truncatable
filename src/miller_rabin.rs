@@ -1,8 +1,7 @@
-use num_bigint::{ BigUint, RandBigInt };
+use num_bigint::{BigUint, RandBigInt};
 use num_integer::Integer;
 
 use rand::thread_rng;
-
 
 fn get_rd(n: &BigUint) -> (usize, BigUint) {
     let mut odd: BigUint = n - 1u8;
@@ -27,7 +26,7 @@ pub fn miller_rabin(num: &BigUint, k: u32) -> bool {
         if &x == &one || &x == &upper_limit {
             continue 'witness;
         }
-        
+
         for _ in 0..r {
             x = x.modpow(&two, num);
             if &x == &one || &x == &upper_limit {

@@ -2,14 +2,9 @@
 
 use num_bigint::BigUint;
 use num_integer::Integer;
-use num_traits::{
-    Pow,
-    cast::ToPrimitive,
-    Zero,
-    One
-};
+use num_traits::{cast::ToPrimitive, One, Pow, Zero};
 
-use std::ops::{ Mul, Rem, RemAssign, Index, Range };
+use std::ops::{Index, Mul, Range, Rem, RemAssign};
 
 #[derive(Eq, PartialEq, Clone)]
 pub struct Poly {
@@ -29,7 +24,7 @@ impl std::fmt::Debug for Poly {
                     string.push_str(&v.to_string());
                 }
                 match i {
-                    0 => {},
+                    0 => {}
                     1 => string.push('x'),
                     x => string.push_str(&format!("x^{}", x)),
                 }
@@ -57,13 +52,15 @@ impl Poly {
     /// calculates (self ^ n % (x^r-1))
     pub fn modpow(&mut self, n: &BigUint, r: usize) {
         let mut exponent = n.clone();
-        let mut number = Poly { data: vec![One::one()]};
+        let mut number = Poly {
+            data: vec![One::one()],
+        };
         // println!("exp: {}\nnumber: {:?}\nself: {:?}\n", exponent, number, self);
-        while !exponent.is_zero() {            
+        while !exponent.is_zero() {
             if !exponent.is_even() {
                 number = &number * &*self;
                 while number.len() > r {
-                    let new = (number.len() -1) % r;
+                    let new = (number.len() - 1) % r;
                     let x = number.data.pop().unwrap();
                     number.data[new] += x;
                 }
@@ -86,12 +83,14 @@ impl Poly {
         let mut chunks = self.data.chunks_mut(r.to_usize().unwrap());
         let mut low: Vec<BigUint> = chunks.next().unwrap().to_vec();
         for chunk in chunks {
-            low.iter_mut().zip(chunk).for_each(|(lo, hi)| { *lo += &*hi; *lo %= n });
+            low.iter_mut().zip(chunk).for_each(|(lo, hi)| {
+                *lo += &*hi;
+                *lo %= n
+            });
         }
         self.data = low;
         *self %= n;
         self.normalize();
-        
     }
 
     pub fn len(&self) -> usize {
@@ -114,19 +113,19 @@ impl Mul for &Poly {
 
     fn mul(self, other: &Poly) -> Poly {
         if self.len() == 0 {
-            return self.clone()
+            return self.clone();
         }
 
-        let mut res: Vec<BigUint> = std::iter::repeat(Zero::zero()).take(self.len() + other.len() - 1).collect();
+        let mut res: Vec<BigUint> = std::iter::repeat(Zero::zero())
+            .take(self.len() + other.len() - 1)
+            .collect();
         for (i, x) in self.data.iter().enumerate() {
             for (j, y) in other.data.iter().enumerate() {
-                res[i + j] += x*y;
+                res[i + j] += x * y;
             }
         }
 
-        Poly {
-            data: res
-        }
+        Poly { data: res }
     }
 }
 
@@ -161,9 +160,15 @@ mod test {
 
     #[test]
     fn mul() {
-        let a = Poly { data: vec![5u8.into(), 3u8.into(), 7u8.into()] };
-        let b = Poly { data: vec![11u8.into(), 5u8.into() ]};
-        let x = Poly { data: vec![55u8.into(), 58u8.into(), 92u8.into(), 35u8.into()]};
+        let a = Poly {
+            data: vec![5u8.into(), 3u8.into(), 7u8.into()],
+        };
+        let b = Poly {
+            data: vec![11u8.into(), 5u8.into()],
+        };
+        let x = Poly {
+            data: vec![55u8.into(), 58u8.into(), 92u8.into(), 35u8.into()],
+        };
         assert_eq!(&a * &b, x);
     }
 

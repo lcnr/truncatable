@@ -1,14 +1,6 @@
 use num_bigint::BigUint;
-use num_integer::{
-    Integer,
-    Roots
-};
-use num_traits::{
-    ToPrimitive,
-    Zero,
-    One,
-    Pow
-};
+use num_integer::{Integer, Roots};
+use num_traits::{One, Pow, ToPrimitive, Zero};
 
 use crate::poly::Poly;
 
@@ -28,13 +20,13 @@ pub fn aks(n: &BigUint) -> bool {
     for b in 2..=(n.bits() as u32) {
         let a = n.nth_root(b);
         if &a.pow(b) == n {
-            return false
+            return false;
         }
     }
 
     // find the smallest r such that the multiplicative order of n modulo r > (log2 n)^2
     let goal: BigUint = BigUint::from(n.bits()).pow(2u8);
-    let r = { 
+    let r = {
         let mut r = BigUint::from(1u8);
         'outer: loop {
             r += 1u8;
@@ -75,7 +67,7 @@ pub fn aks(n: &BigUint) -> bool {
         let mut poly = Poly::new(a.into());
         poly.modpow(n, r.to_usize().unwrap());
         poly %= n;
-        
+
         // check if `poly == X^n + a (mod X^r - 1)`
         // `X^n + a mod X^r - 1` is equal to a + x ^ (n % r) == a + x ^ v
         // does not work if `v` is zero, this does not matter as `n % r = 0` means that n is not prime`,
